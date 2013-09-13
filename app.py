@@ -15,6 +15,8 @@ filenames = [
     ]
 
 for (dataname, shpname, zipname) in filenames:
+    from os import getcwd
+    print >> stderr, 'extracting', zipname, 'in', getcwd()
     ZipFile(zipname).extractall()
 
 app = Flask(__name__)
