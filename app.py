@@ -1,5 +1,6 @@
 from sys import stderr
 from zipfile import ZipFile
+from os import chdir, getcwd
 import json
 
 from flask import Flask
@@ -13,11 +14,13 @@ filenames = [
     ('Census Places (2010)', 'gz_2010_06_160_00_500k/gz_2010_06_160_00_500k.shp', 'gz_2010_06_160_00_500k.zip'),
     ('Census Tracts (2010)', 'gz_2010_06_140_00_500k/gz_2010_06_140_00_500k.shp', 'gz_2010_06_140_00_500k.zip'),
     ]
+zipdir = getcwd()
+chdir('/tmp')
 
 for (dataname, shpname, zipname) in filenames:
-    from os import getcwd
-    print >> stderr, 'extracting', zipname, 'in', getcwd()
-    ZipFile(zipname).extractall()
+    zippath = zipdir + '/' +zipname
+    print >> stderr, 'extracting', zippath, 'in', getcwd()
+    ZipFile(zippath).extractall()
 
 app = Flask(__name__)
 
