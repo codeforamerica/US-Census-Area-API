@@ -1,10 +1,21 @@
 from sys import stderr
+from zipfile import ZipFile
+import json
 
 from flask import Flask
 from flask import request
 from osgeo import ogr, osr
 from shapely import wkb
-import json
+
+filenames = [
+    ('Census Counties (2010)', 'gz_2010_us_050_00_500k/gz_2010_us_050_00_500k.shp', 'gz_2010_us_050_00_500k.zip'),
+    ('Congressional Districts (113th)', 'cb_rd13_us_cd113_500k/cb_rd13_us_cd113_500k.shp', 'cb_rd13_us_cd113_500k.zip'),
+    ('Census Places (2010)', 'gz_2010_06_160_00_500k/gz_2010_06_160_00_500k.shp', 'gz_2010_06_160_00_500k.zip'),
+    ('Census Tracts (2010)', 'gz_2010_06_140_00_500k/gz_2010_06_140_00_500k.shp', 'gz_2010_06_140_00_500k.zip'),
+    ]
+
+for (dataname, shpname, zipname) in filenames:
+    ZipFile(zipname).extractall()
 
 app = Flask(__name__)
 
@@ -26,15 +37,8 @@ def areas():
     #
     # Look at four files in turn
     #
-    filenames = [
-        ('Census Counties (2010)', 'gz_2010_us_050_00_500k/gz_2010_us_050_00_500k.shp'),
-        ('Congressional Districts (113th)', 'cb_rd13_us_cd113_500k/cb_rd13_us_cd113_500k.shp'),
-        ('Census Places (2010)', 'gz_2010_06_160_00_500k/gz_2010_06_160_00_500k.shp'),
-        ('Census Tracts (2010)', 'gz_2010_06_140_00_500k/gz_2010_06_140_00_500k.shp'),
-        ]
-
-    for (dataname, filename) in filenames:
-        datasource = ogr.Open(filename)
+    for (dataname, shpname, zipname) in filenames:
+        datasource = ogr.Open(shpname)
         layer = datasource.GetLayer(0)
         
         defn = layer.GetLayerDefn()
