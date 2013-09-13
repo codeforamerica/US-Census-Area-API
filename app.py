@@ -1,6 +1,5 @@
 from sys import stderr
 from zipfile import ZipFile
-from os import chdir, getcwd
 import json
 
 from flask import Flask
@@ -9,18 +8,9 @@ from osgeo import ogr, osr
 from shapely import wkb
 
 filenames = [
-    ('Census Counties (2010)', 'gz_2010_us_050_00_500k/gz_2010_us_050_00_500k.shp', 'gz_2010_us_050_00_500k.zip'),
-    ('Congressional Districts (113th)', 'cb_rd13_us_cd113_500k/cb_rd13_us_cd113_500k.shp', 'cb_rd13_us_cd113_500k.zip'),
     ('Census Places (2010)', 'gz_2010_06_160_00_500k/gz_2010_06_160_00_500k.shp', 'gz_2010_06_160_00_500k.zip'),
-    ('Census Tracts (2010)', 'gz_2010_06_140_00_500k/gz_2010_06_140_00_500k.shp', 'gz_2010_06_140_00_500k.zip'),
     ]
-zipdir = getcwd()
-chdir('/tmp')
 
-for (dataname, shpname, zipname) in filenames:
-    zippath = zipdir + '/' +zipname
-    print >> stderr, 'extracting', zippath, 'in', getcwd()
-    ZipFile(zippath).extractall()
 
 app = Flask(__name__)
 
