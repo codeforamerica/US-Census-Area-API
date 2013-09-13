@@ -3,6 +3,7 @@ from sys import stderr
 from flask import Flask
 from flask import request
 from osgeo import ogr, osr
+from shapely import wkb
 
 app = Flask(__name__)
 
@@ -22,12 +23,24 @@ def areas():
     layer = datasource.GetLayer(0)
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
     
+    defn = layer.GetLayerDefn()
+    names = [defn.GetFieldDefn(i).name for i in range(defn.GetFieldCount())]
+    
     layer.SetSpatialFilter(point)
     
-    output = []
-    
     for feature in layer:
+        
+        properties = dict()
+        
+        for (index, name) in enumerate(names):
+            properties[name] = feature.GetField(index)
+        
+        geometry = feature.GetGeometryRef()
+        shape = wkb.loads(geometry.ExportToWkb())
+
         feature.DumpReadable()
+        print >> stderr, properties
+        print >> stderr, shape.__geo_interface__
     
     return "hello %s" % point
     
