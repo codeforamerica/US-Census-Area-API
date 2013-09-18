@@ -1,6 +1,3 @@
 venv-census-api
-gz_2010_06_140_00_500k
-cb_rd13_us_cd113_500k
-gz_2010_06_160_00_500k
-gz_2010_us_050_00_500k
+datasource.???
 app.pyc
