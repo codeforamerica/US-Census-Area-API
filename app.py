@@ -8,7 +8,7 @@ from osgeo import ogr, osr
 from shapely import wkb
 
 filenames = [
-    ('Census Places (2010)', 'gz_2010_06_160_00_500k/gz_2010_06_160_00_500k.shp', 'gz_2010_06_160_00_500k.zip'),
+    ('Bay Area Census (2010-2013)', 'datasource.shp', None),
     ]
 
 
