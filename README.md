@@ -2,7 +2,7 @@ US Census Area API
 ==================
 
 Simple geospatial API for US Census, in response to the
-[Census Area API hack request](https://github.com/codeforamerica/hack-requests/blob/master/census-area-API.md)
+[Census Area API hack request](https://github.com/codeforamerica/hack-requests/blob/master/census-area-API.md).
 
 Installing
 ----
