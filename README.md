@@ -4,6 +4,9 @@ US Census Area API
 Simple geospatial API for US Census, in response to the
 [Census Area API hack request](https://github.com/codeforamerica/hack-requests/blob/master/census-area-API.md).
 
+A sample copy with Bay Area Census data can be found at
+[census-api-bay-area.herokuapp.com](http://census-api-bay-area.herokuapp.com).
+
 Installing
 ----
 
