@@ -16,7 +16,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return 'Hi there'
+    with open('index.html') as index:
+        return index.read()
 
 @app.route("/areas")
 def areas():
