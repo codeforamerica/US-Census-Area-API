@@ -25,3 +25,35 @@ def json_encode(data):
             output.write(token)
     
     return output.getvalue()
+
+falsies = set(['f', 'false', 'n', 'no', '0'])
+
+def bool(val):
+    ''' Convert a value to boolean.
+    
+    >>> bool(True), bool(False)
+    (True, False)
+
+    >>> bool(1), bool(0)
+    (True, False)
+
+    >>> bool('1'), bool('0')
+    (True, False)
+
+    >>> bool('y'), bool('n')
+    (True, False)
+
+    >>> bool('t'), bool('f')
+    (True, False)
+
+    >>> bool('true'), bool('false')
+    (True, False)
+
+    >>> bool(99), bool('what')
+    (True, True)
+    '''
+    return str(val).lower() not in falsies
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
