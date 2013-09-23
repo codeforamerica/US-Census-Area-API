@@ -3,9 +3,10 @@ import json
 
 from flask import Flask
 from flask import request
-from osgeo import ogr, osr
-from shapely import wkb
+from flask import Response
+from osgeo import ogr
 
+from geo import get_intersecting_features
 from util import json_encode
 
 filenames = [
@@ -34,27 +35,10 @@ def areas():
     # Look at four files in turn
     #
     for (dataname, shpname, zipname) in filenames:
-        datasource = ogr.Open(shpname)
-        layer = datasource.GetLayer(0)
-        
-        defn = layer.GetLayerDefn()
-        names = [defn.GetFieldDefn(i).name for i in range(defn.GetFieldCount())]
-        
-        layer.SetSpatialFilter(point)
-        
-        for feature in layer:
-            properties = dict(dataset=dataname)
-            
-            for (index, name) in enumerate(names):
-                properties[name] = feature.GetField(index)
-            
-            geometry = feature.GetGeometryRef()
-            shape = wkb.loads(geometry.ExportToWkb())
-            
-            features.append(dict(type='Feature', properties=properties, geometry=shape.__geo_interface__))
+        features += get_intersecting_features(ogr.Open(shpname), dataname, point)
 
     geojson = dict(type='FeatureCollection', features=features)
-    return json_encode(geojson)
+    return Response(json_encode(geojson), headers={'Content-type': 'text/json'})
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
