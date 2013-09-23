@@ -1,6 +1,6 @@
 from shapely import wkb
 
-def get_intersecting_features(datasource, dataname, geometry):
+def get_intersecting_features(datasource, dataname, geometry, include_geom):
     '''
     '''
     features = []
@@ -17,6 +17,10 @@ def get_intersecting_features(datasource, dataname, geometry):
         
         for (index, name) in enumerate(names):
             properties[name] = feature.GetField(index)
+        
+        if not include_geom:
+            features.append(dict(type='Feature', properties=properties, geometry=None))
+            continue
         
         geometry = feature.GetGeometryRef()
         shape = wkb.loads(geometry.ExportToWkb())

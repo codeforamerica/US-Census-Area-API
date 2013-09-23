@@ -7,7 +7,7 @@ from flask import Response
 from osgeo import ogr
 
 from geo import get_intersecting_features
-from util import json_encode
+from util import json_encode, bool
 
 filenames = [
     ('Bay Area Census (2010-2013)', 'datasource.shp', None),
@@ -24,18 +24,21 @@ def hello():
 def areas():
     lat = float(request.args['lat'])
     lon = float(request.args['lon'])
+
+    include_geom = bool(request.args.get('include_geom', 1))
     
     # This. Is. Python.
     ogr.UseExceptions()
     
     features = []
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
+    args = point, include_geom
 
     #
     # Look at four files in turn
     #
     for (dataname, shpname, zipname) in filenames:
-        features += get_intersecting_features(ogr.Open(shpname), dataname, point)
+        features += get_intersecting_features(ogr.Open(shpname), dataname, *args)
 
     geojson = dict(type='FeatureCollection', features=features)
     return Response(json_encode(geojson), headers={'Content-type': 'text/json'})
