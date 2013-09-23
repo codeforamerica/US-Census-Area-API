@@ -1,5 +1,4 @@
 from sys import stderr
-from zipfile import ZipFile
 import json
 
 from flask import Flask
@@ -7,10 +6,11 @@ from flask import request
 from osgeo import ogr, osr
 from shapely import wkb
 
+from util import json_encode
+
 filenames = [
     ('Bay Area Census (2010-2013)', 'datasource.shp', None),
     ]
-
 
 app = Flask(__name__)
 
@@ -54,7 +54,7 @@ def areas():
             features.append(dict(type='Feature', properties=properties, geometry=shape.__geo_interface__))
 
     geojson = dict(type='FeatureCollection', features=features)
-    return json.dumps(geojson)
+    return json_encode(geojson)
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
