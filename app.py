@@ -25,7 +25,8 @@ def areas():
     lat = float(request.args['lat'])
     lon = float(request.args['lon'])
 
-    include_geom = bool(request.args.get('include_geom', 1))
+    include_geom = bool(request.args.get('include_geom', True))
+    json_callback = request.args.get('callback', None)
     
     # This. Is. Python.
     ogr.UseExceptions()
@@ -41,7 +42,13 @@ def areas():
         features += get_intersecting_features(ogr.Open(shpname), dataname, *args)
 
     geojson = dict(type='FeatureCollection', features=features)
-    return Response(json_encode(geojson), headers={'Content-type': 'text/json'})
+    body, mime = json_encode(geojson), 'application/json'
+    
+    if json_callback:
+        body = '%s(%s);\n' % (json_callback, body)
+        mime = 'text/javascript'
+    
+    return Response(body, headers={'Content-type': mime})
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
