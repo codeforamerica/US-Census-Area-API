@@ -1,8 +1,9 @@
 ''' Extract one GeoJSON file per GEOID from local zip files.
 
-Built for zip files of County and Place geometries:
+Built for zip files of State, County, and Place geometries:
 
-    curl -OL 'ftp://ftp.census.gov:21//geo/tiger/TIGER2013/COUNTY/tl_2013_us_county.zip'
+    curl -OL 'ftp://ftp.census.gov:21//geo/tiger/TIGER2013/STATE/tl_2013_us_state.zip'
+         -OL 'ftp://ftp.census.gov:21//geo/tiger/TIGER2013/COUNTY/tl_2013_us_county.zip'
          -OL 'ftp://ftp.census.gov:21//geo/tiger/TIGER2013/PLACE/tl_2013_[01-99]_place.zip'
 '''
 from zipfile import ZipFile
