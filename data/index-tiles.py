@@ -154,41 +154,17 @@ if __name__ == '__main__':
             
             if index == 0:
                 print 'copy', filename, 'to', outname, '...'
-            
                 copyfile(filename, outname)
 
             else:
                 print 'append', filename, 'to', outname, '...'
-            
-                from re import compile, S
-                pat = compile(r'^{\n"type": "FeatureCollection", *\n"bbox": (\[.+?\]), *\n"features": \[\n(.+)\n\] *\n}\n$', S)
-
-                filedata = open(filename).read()
-                filematch = pat.match(filedata)
-                assert filematch, 'Bad '+ filename
-                
-                outdata = open(outname).read()
-                outmatch = pat.match(outdata)
-                assert outmatch, 'Bad '+ outname
-                
-                with open(outname, 'w') as out:
-                    print >> out, '{\n"type": "FeatureCollection",\n"bbox":',
-                    print >> out, outmatch.group(1)+',' # bbox is the same each time
-                    print >> out, '"features": ['
-                    print >> out, filematch.group(2)
-                    print >> out, ','
-                    print >> out, outmatch.group(2)
-                    print >> out, ']\n}'
+                append_geojson(filename, outname)
 
     #
     # Extract ZCTA5 and tract features for each mid-zoom tile.
     #
     
     zipnames = ['tl_2013_us_zcta510.zip'] + glob('tl_2013_??_tract.zip')
-
-    zipnames = glob('tl_2013_?_zcta510.zip') + glob('tl_2013_??_tract.zip')
-    
-    zipnames = []
     
     for zipname in zipnames:
         zipfile = ZipFile(zipname)
@@ -218,7 +194,7 @@ if __name__ == '__main__':
         cleanup(shpname)
     
     #
-    # Combine per-state ZCTA5 files into per-tile ZCTA5 files.
+    # Combine per-state tract files into per-tile tract files.
     #
     
     coords = coordinates(zoom_mid)
@@ -226,11 +202,11 @@ if __name__ == '__main__':
     for (coord, sw, ne) in coords:
         path = prepdir(coord)
         
-        for (index, filename) in enumerate(glob('%s/tl_2013_?_zcta510.json' % path)):
-            if filename.endswith('tl_2013_us_zcta510.json'):
+        for (index, filename) in enumerate(glob('%s/tl_2013_??_tract.json' % path)):
+            if filename.endswith('tl_2013_us_tract.json'):
                 continue
         
-            outname = '%s/tl_2013_us_zcta510.json' % path
+            outname = '%s/tl_2013_us_tract.json' % path
             
             if index == 0:
                 print 'copy', filename, 'to', outname, '...'
