@@ -1,5 +1,7 @@
 from time import time
 from sys import stderr
+from threading import Thread
+from thread import get_ident
 
 from requests import get
 from shapely.geometry import MultiPolygon, Polygon, Point
@@ -41,7 +43,7 @@ def check(loc, zoom):
     tile_shp = Polygon([(sw.lon, sw.lat), (sw.lon, ne.lat), (ne.lon, ne.lat), (ne.lon, sw.lat), (sw.lon, sw.lat)])
     
     resp = get(url)
-    print >> stderr, 'request took', resp.elapsed, 'from', url
+    print >> stderr, 'request took', resp.elapsed, 'from', url, 'in', get_ident()
     
     start = time()
     topo = resp.json()
@@ -86,16 +88,34 @@ def check(loc, zoom):
                 # object failed a point-in-polygon check and can be discarded.
                 continue
             
-            print >> stderr, object['properties']
+            yield object['properties']
     
-    print >> stderr, 'check took', (time() - start), 'seconds'
+    print >> stderr, 'check took', (time() - start), 'seconds', 'in', get_ident()
+
+def check_do(loc, zoom, results):
+    '''
+    '''
+    for result in check(loc, zoom):
+        results.append(result)
+
+def get_features(loc):
+    '''
+    '''
+    start = time()
+    results = []
+
+    t1 = Thread(target=check_do, args=(loc, 10, results))
+    t2 = Thread(target=check_do, args=(loc, 8, results))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+    
+    print >> stderr, 'results took', (time() - start), 'seconds'
+    
+    return results
 
 if __name__ == '__main__':
     
-    loc = Location(37.775793, -122.413549)
-    check(loc, 10)
-    check(loc, 8)
-    
-    loc = Location(37.805311, -122.272540)
-    check(loc, 10)
-    check(loc, 8)
+    print get_features(Location(37.805311, -122.272540))
+    print get_features(Location(37.775793, -122.413549))
