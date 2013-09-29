@@ -9,7 +9,7 @@ Built for zip files of State, County, CBSA, and Place geometries:
 '''
 from zipfile import ZipFile
 from itertools import product
-from os import makedirs, remove, stat
+from os import makedirs, remove, stat, link
 from subprocess import Popen
 from shutil import copyfile
 from os.path import exists
@@ -74,7 +74,7 @@ def runogr2ogr(cmd):
     
     assert ogrcmd.returncode == 0, 'Failed on %s' % outname
     
-    if 'GeoJSON' in cmd and stat(outname).st_size == 131:
+    if 'GeoJSON' in cmd and stat(outname).st_size <= 131:
         remove(outname)
 
 def append_geojson(srcname, destname):
@@ -215,3 +215,47 @@ if __name__ == '__main__':
             else:
                 print 'append', filename, 'to', outname, '...'
                 append_geojson(filename, outname)
+    
+    #
+    # 
+    #
+    
+    zooms = zoom_low, zoom_mid
+    
+    for zoom in zooms:
+        for (coord, sw, ne) in coordinates(zoom):
+            path = prepdir(coord)
+            
+            files = glob('%s/tl_2013_us_*.json' % path)
+            
+            if not files:
+                continue
+            
+            try:
+                shortnames = []
+                
+                for file in files:
+                    # knock off the "tl_2013_us_" part
+                    shortname = path + '/' + file[len(path) + 12:]
+                    shortnames.append(shortname)
+                    link(file, shortname)
+                
+                outname = path + '.topojson'
+                
+                print outname, '...'
+                
+                cmd = './node_modules/topojson/bin/topojson', '--cartesian', \
+                      '--allow-empty', '--bbox', '-q', '36000000', '-p', \
+                      '--out', outname
+                
+                cmd += tuple(shortnames)
+                
+                topocmd = Popen(cmd)
+                topocmd.wait()
+                
+                assert topocmd.returncode == 0, 'Failed on %s' % outname
+            
+            finally:
+                for shortname in shortnames:
+                    if shortname not in files:
+                        remove(shortname)
