@@ -1,2 +1,4 @@
 unidecode
 modestmaps
+requests
+shapely
