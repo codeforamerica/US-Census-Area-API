@@ -43,12 +43,15 @@ def check(loc, zoom):
     tile_shp = Polygon([(sw.lon, sw.lat), (sw.lon, ne.lat), (ne.lon, ne.lat), (ne.lon, sw.lat), (sw.lon, sw.lat)])
     
     resp = get(url)
-    print >> stderr, 'request took', resp.elapsed, 'from', url, 'in', get_ident()
+    topo = resp.json()
+
+    print >> stderr, 'request took', resp.elapsed, 'from', url, 'in', hex(get_ident())
     
     start = time()
-    topo = resp.json()
     
     assert topo['type'] == 'Topology'
+    
+    bbox_fails, shape_fails = 0, 0
     
     for layer in topo['objects']:
         if zoom == 8:
@@ -65,6 +68,7 @@ def check(loc, zoom):
             
             if not point.within(obj_box):
                 # object failed a simple bounding box check and can be discarded.
+                bbox_fails += 1
                 continue
             
             if object['type'] == 'Polygon':
@@ -86,13 +90,16 @@ def check(loc, zoom):
             
             if not point.within(obj_shp):
                 # object failed a point-in-polygon check and can be discarded.
+                shape_fails += 1
                 continue
             
-            yield object['properties']
+            p = object['properties']
+            
+            yield p.get('NAME', None), p.get('NAMELSAD', None), p.get('GEOID', None), p.get('GEOID10', None)
     
-    print >> stderr, 'check took', (time() - start), 'seconds', 'in', get_ident()
+    print >> stderr, 'check took', (time() - start), 'seconds', 'in', hex(get_ident()), 'with', bbox_fails, 'bbox fails and', shape_fails, 'shape fails'
 
-def check_do(loc, zoom, results):
+def retrieve_zoom_features(loc, zoom, results):
     '''
     '''
     for result in check(loc, zoom):
@@ -103,13 +110,17 @@ def get_features(loc):
     '''
     start = time()
     results = []
+    
+    threads = [
+        Thread(target=retrieve_zoom_features, args=(loc, 10, results)),
+        Thread(target=retrieve_zoom_features, args=(loc, 8, results))
+        ]
 
-    t1 = Thread(target=check_do, args=(loc, 10, results))
-    t2 = Thread(target=check_do, args=(loc, 8, results))
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
+    for t in threads:
+        t.start()
+    
+    for t in threads:
+        t.join()
     
     print >> stderr, 'results took', (time() - start), 'seconds'
     
@@ -117,5 +128,10 @@ def get_features(loc):
 
 if __name__ == '__main__':
     
-    print get_features(Location(37.805311, -122.272540))
-    print get_features(Location(37.775793, -122.413549))
+    print get_features(Location(47.620510, -122.349305)) # Space Needle
+    print get_features(Location(37.805311, -122.272540)) # Oakland City Hall
+    print get_features(Location(37.775793, -122.413549)) # Code for America
+    print get_features(Location(40.753526, -73.976626)) # Grand Central Station
+    print get_features(Location(38.871006, -77.055963)) # The Pentagon
+    print get_features(Location(29.951057, -90.081090)) # The Superdome
+    print get_features(Location(41.878874, -87.635907)) # Sears Tower
