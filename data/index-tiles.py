@@ -13,10 +13,13 @@ from os import makedirs, remove, stat
 from subprocess import Popen
 from shutil import copyfile
 from os.path import exists
+from re import compile, S
 from glob import glob
 
 from ModestMaps.Core import Coordinate
 from ModestMaps.OpenStreetMap import Provider
+
+zoom_low, zoom_mid, zoom_high = 8, 10, 12
 
 def extract(zipfile):
     '''
@@ -74,13 +77,36 @@ def runogr2ogr(cmd):
     if 'GeoJSON' in cmd and stat(outname).st_size == 131:
         remove(outname)
 
+def append_geojson(srcname, destname):
+    ''' Append ogr2ogr-generated source file to destination file.
+    
+        Uses regular expressions instead of JSON parser, so formats and spacing
+        and line breaks and bounding boxes must all match normal ogr2ogr output.
+    '''
+    pat = compile(r'^{\n"type": "FeatureCollection", *\n"bbox": (\[.+?\]), *\n"features": \[\n(.+)\n\] *\n}\n$', S)
+
+    srcdata = open(srcname).read()
+    srcmatch = pat.match(srcdata)
+    assert srcmatch, 'Bad '+ srcname
+    
+    destdata = open(destname).read()
+    destmatch = pat.match(destdata)
+    assert destmatch, 'Bad '+ destname
+    
+    with open(destname, 'w') as out:
+        print >> out, '{\n"type": "FeatureCollection",\n"bbox":',
+        print >> out, destmatch.group(1)+',' # bbox is the same each time
+        print >> out, '"features": ['
+        print >> out, destmatch.group(2)
+        print >> out, ','
+        print >> out, srcmatch.group(2)
+        print >> out, ']\n}'
+
 if __name__ == '__main__':
 
     #
-    # Extract features for each tile.
+    # Extract state, county and CBSA features for each low-zoom tile.
     #
-    
-    zoom = 8
     
     # States need to be first in the list, so 
     zipnames = ['tl_2013_us_state.zip', 'tl_2013_us_county.zip', 'tl_2013_us_cbsa.zip'] \
@@ -90,7 +116,7 @@ if __name__ == '__main__':
         zipfile = ZipFile(zipname)
         shpname = extract(zipfile)
         
-        for (coord, sw, ne) in coordinates(zoom):
+        for (coord, sw, ne) in coordinates(zoom_low):
             path = prepdir(coord)
 
             outname = '%s/%s.json' % (path, shpname[:-4])
@@ -115,7 +141,9 @@ if __name__ == '__main__':
     # Combine per-state place files into per-tile place files.
     #
     
-    for (coord, sw, ne) in coordinates(zoom):
+    coords = coordinates(zoom_low)
+    
+    for (coord, sw, ne) in coords:
         path = prepdir(coord)
         
         for (index, filename) in enumerate(glob('%s/tl_2013_??_place.json' % path)):
@@ -151,3 +179,63 @@ if __name__ == '__main__':
                     print >> out, ','
                     print >> out, outmatch.group(2)
                     print >> out, ']\n}'
+
+    #
+    # Extract ZCTA5 and tract features for each mid-zoom tile.
+    #
+    
+    zipnames = ['tl_2013_us_zcta510.zip'] + glob('tl_2013_??_tract.zip')
+
+    zipnames = glob('tl_2013_?_zcta510.zip') + glob('tl_2013_??_tract.zip')
+    
+    zipnames = []
+    
+    for zipname in zipnames:
+        zipfile = ZipFile(zipname)
+        shpname = extract(zipfile)
+        
+        for (coord, sw, ne) in coordinates(zoom_mid):
+            parent = coord.zoomTo(zoom_low).container()
+            
+            if not exists(prepdir(parent) + '/tl_2013_us_state.json'):
+                # skip this probably-empty tile
+                continue
+            
+            path = prepdir(coord)
+            
+            outname = '%s/%s.json' % (path, shpname[:-4])
+            
+            print outname, '...'
+            
+            if exists(outname):
+                remove(outname)
+            
+            cmd = 'ogr2ogr', '-spat', str(sw.lon), str(sw.lat), str(ne.lon), str(ne.lat), \
+                  '-t_srs', 'EPSG:4326', '-f', 'GeoJSON', '-lco', 'WRITE_BBOX=YES', outname, shpname
+            
+            runogr2ogr(cmd)
+        
+        cleanup(shpname)
+    
+    #
+    # Combine per-state ZCTA5 files into per-tile ZCTA5 files.
+    #
+    
+    coords = coordinates(zoom_mid)
+    
+    for (coord, sw, ne) in coords:
+        path = prepdir(coord)
+        
+        for (index, filename) in enumerate(glob('%s/tl_2013_?_zcta510.json' % path)):
+            if filename.endswith('tl_2013_us_zcta510.json'):
+                continue
+        
+            outname = '%s/tl_2013_us_zcta510.json' % path
+            
+            if index == 0:
+                print 'copy', filename, 'to', outname, '...'
+                copyfile(filename, outname)
+
+            else:
+                print 'append', filename, 'to', outname, '...'
+                append_geojson(filename, outname)
