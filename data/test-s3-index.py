@@ -6,7 +6,7 @@ from threading import Thread
 from thread import get_ident
 
 from requests import get
-from shapely.geometry import MultiPolygon, Polygon, Point
+from shapely.geometry import MultiPolygon, Polygon, LineString, Point
 from ModestMaps.OpenStreetMap import Provider
 from ModestMaps.Geo import Location
 
@@ -35,6 +35,29 @@ def unwind(indexes, arcs, transform):
         ring += line if index >= 0 else reversed(line)
     
     return ring
+
+def decode(object, topo):
+    ''' Decode a single object geometry from a TopoJSON topology.
+    
+        Throw an error if it's anything other than a polygon or multipolygon.
+    '''
+    arcs, transform = topo['arcs'], topo['transform']
+    
+    if object['type'] == 'Polygon':
+        rings = [unwind(indexes, arcs, transform) for indexes in object['arcs']]
+        return Polygon(rings[0], rings[1:])
+        
+    if object['type'] == 'MultiPolygon':
+        parts = []
+        
+        for part in object['arcs']:
+            rings = [unwind(indexes, arcs, transform) for indexes in part]
+            part_shp = Polygon(rings[0], rings[1:])
+            parts.append(part_shp)
+        
+        return MultiPolygon(parts)
+    
+    raise Exception(object['type'])
 
 def retrieve_zoom_features(loc, zoom):
     ''' Retrieve all features enclosing a given point location at a zoom level.
@@ -79,22 +102,7 @@ def retrieve_zoom_features(loc, zoom):
                 bbox_fails += 1
                 continue
             
-            if object['type'] == 'Polygon':
-                rings = [unwind(ring, topo['arcs'], topo['transform']) for ring in object['arcs']]
-                obj_shp = Polygon(rings[0], rings[1:])
-                
-            elif object['type'] == 'MultiPolygon':
-                parts = []
-                
-                for part in object['arcs']:
-                    rings = [unwind(ring, topo['arcs'], topo['transform']) for ring in part]
-                    part_shp = Polygon(rings[0], rings[1:])
-                    parts.append(part_shp)
-                
-                obj_shp = MultiPolygon(parts)
-            
-            else:
-                raise Exception(object['type'])
+            obj_shp = decode(object, topo)
             
             if not point.within(obj_shp):
                 # object failed a point-in-polygon check and can be discarded.
