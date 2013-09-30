@@ -1,3 +1,5 @@
+''' Test script for retrieving features from Code for America S3-backed index.
+'''
 from time import time
 from sys import stderr
 from threading import Thread
@@ -9,7 +11,13 @@ from ModestMaps.OpenStreetMap import Provider
 from ModestMaps.Geo import Location
 
 def unwind(indexes, arcs, transform):
-    '''
+    ''' Unwind a set of TopoJSON arc indexes into a transformed line or ring.
+    
+        Arc index documentation, with explanation of negative indexes:
+            https://github.com/topojson/topojson-specification#214-arc-indexes
+        
+        Transformations:
+            https://github.com/topojson/topojson-specification#212-transforms
     '''
     ring = []
     
@@ -28,8 +36,12 @@ def unwind(indexes, arcs, transform):
     
     return ring
 
-def check(loc, zoom):
-    '''
+def retrieve_zoom_features(loc, zoom):
+    ''' Retrieve all features enclosing a given point location at a zoom level.
+    
+        Requests TopoJSON tile from forever.codeforamerica.org spatial index,
+        decodes bounding boxes and geometries if necessary, then yields a stream
+        of any feature feature whose geometry covers the requested point.
     '''
     osm = Provider()
 
@@ -37,10 +49,6 @@ def check(loc, zoom):
     coord = osm.locationCoordinate(loc).zoomTo(zoom)
     path = '%(zoom)d/%(column)d/%(row)d' % coord.__dict__
     url = 'http://forever.codeforamerica.org/Census-API/by-tile/%s.topojson.gz' % path
-    
-    sw = osm.coordinateLocation(coord.down())
-    ne = osm.coordinateLocation(coord.right())
-    tile_shp = Polygon([(sw.lon, sw.lat), (sw.lon, ne.lat), (ne.lon, ne.lat), (ne.lon, sw.lat), (sw.lon, sw.lat)])
     
     resp = get(url)
     topo = resp.json()
@@ -62,9 +70,9 @@ def check(loc, zoom):
             raise Exception('Unknown layer %d' % zoom)
         
         for object in topo['objects'][layer]['geometries']:
-            xmin, ymin, xmax, ymax = object['bbox']
+            x_, y_, _x, _y = object['bbox']
             
-            obj_box = Polygon([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)])
+            obj_box = Polygon([(x_, y_), (x_, _y), (_x, _y), (_x, y_), (x_, y_)])
             
             if not point.within(obj_box):
                 # object failed a simple bounding box check and can be discarded.
@@ -99,21 +107,21 @@ def check(loc, zoom):
     
     print >> stderr, 'check took', (time() - start), 'seconds', 'in', hex(get_ident()), 'with', bbox_fails, 'bbox fails and', shape_fails, 'shape fails'
 
-def retrieve_zoom_features(loc, zoom, results):
-    '''
-    '''
-    for result in check(loc, zoom):
-        results.append(result)
-
 def get_features(loc):
+    ''' Get a list of features found at the given point location.
+    
+        Thread calls to retrieve_zoom_features().
     '''
-    '''
+    def _retrieve_zoom_features(loc, zoom, results):
+        for result in retrieve_zoom_features(loc, zoom):
+            results.append(result)
+    
     start = time()
     results = []
     
     threads = [
-        Thread(target=retrieve_zoom_features, args=(loc, 10, results)),
-        Thread(target=retrieve_zoom_features, args=(loc, 8, results))
+        Thread(target=_retrieve_zoom_features, args=(loc, 10, results)),
+        Thread(target=_retrieve_zoom_features, args=(loc, 8, results))
         ]
 
     for t in threads:
