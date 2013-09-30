@@ -217,6 +217,39 @@ if __name__ == '__main__':
                 append_geojson(filename, outname)
     
     #
+    # Extract block and block group features for each high-zoom tile.
+    #
+    
+    zipnames = glob('tl_2013_??_bg.zip') + glob('tl_2013_??_tabblock.zip')
+    
+    for zipname in zipnames:
+        zipfile = ZipFile(zipname)
+        shpname = extract(zipfile)
+        
+        for (coord, sw, ne) in coordinates(zoom_high):
+            parent = coord.zoomTo(zoom_low).container()
+            
+            if not exists(prepdir(parent) + '/tl_2013_us_state.json'):
+                # skip this probably-empty tile
+                continue
+            
+            path = prepdir(coord)
+            
+            outname = '%s/%s.json' % (path, shpname[:-4])
+            
+            print outname, '...'
+            
+            if exists(outname):
+                remove(outname)
+            
+            cmd = 'ogr2ogr', '-spat', str(sw.lon), str(sw.lat), str(ne.lon), str(ne.lat), \
+                  '-t_srs', 'EPSG:4326', '-f', 'GeoJSON', '-lco', 'WRITE_BBOX=YES', outname, shpname
+            
+            runogr2ogr(cmd)
+        
+        cleanup(shpname)
+    
+    #
     # 
     #
     
