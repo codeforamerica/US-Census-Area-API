@@ -1,4 +1,5 @@
 from sys import stderr
+from urlparse import urlparse
 import json
 
 from flask import Flask
@@ -17,8 +18,10 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
+    host_port = urlparse(request.base_url).netloc.encode('utf-8')
+
     with open('index.html') as index:
-        return index.read()
+        return index.read().replace('host:port', host_port)
 
 @app.route("/areas")
 def areas():
