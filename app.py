@@ -51,7 +51,7 @@ def areas():
         body = '%s(%s);\n' % (json_callback, body)
         mime = 'text/javascript'
     
-    return Response(body, headers={'Content-type': mime})
+    return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
