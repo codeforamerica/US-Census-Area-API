@@ -42,7 +42,7 @@ def areas():
     # Look at four files in turn
     #
     for (dataname, shpname, zipname) in filenames:
-        features += get_intersecting_features(ogr.Open(shpname), dataname, *args)
+        features += get_intersecting_features(ogr.Open(shpname), *args)
 
     geojson = dict(type='FeatureCollection', features=features)
     body, mime = json_encode(geojson), 'application/json'

@@ -1,7 +1,7 @@
 from shapely import wkb
 from census import get_features
 
-def get_intersecting_features(datasource, dataname, geometry, include_geom):
+def get_intersecting_features(datasource, geometry, include_geom):
     '''
     '''
     if datasource == 'http://forever.codeforamerica.org/Census-API/':
@@ -17,7 +17,7 @@ def get_intersecting_features(datasource, dataname, geometry, include_geom):
     layer.SetSpatialFilter(geometry)
     
     for feature in layer:
-        properties = dict(dataset=dataname)
+        properties = dict()
         
         for (index, name) in enumerate(names):
             properties[name] = feature.GetField(index)
