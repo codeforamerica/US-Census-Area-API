@@ -1,7 +1,7 @@
 from sys import stderr
 from os import environ
 from urlparse import urlparse
-import json
+from time import time
 
 from flask import Flask
 from flask import request
@@ -14,12 +14,44 @@ from census import census_url
 
 app = Flask(__name__)
 
+def get_datasource(environ):
+    '''
+    '''
+    if environ.get('GEO_DATASOURCE', None) == census_url:
+        #
+        # Use the value of the environment variable directly,
+        # get_intersecting_features() knows about census_url.
+        #
+        datasource = environ['GEO_DATASOURCE']
+    
+    else:
+        # Or just open datasource.shp with OGR.
+        datasource = ogr.Open('datasource.shp')
+    
+    return datasource
+
 @app.route('/')
 def hello():
     host_port = urlparse(request.base_url).netloc.encode('utf-8')
 
     with open('index.html') as index:
         return index.read().replace('host:port', host_port)
+
+@app.route('/.well-known/status')
+def status():
+    datasource = get_datasource(environ)
+    
+    status = {
+        'status': 'ok' if bool(datasource) else 'Bad datasource: %s' % repr(datasource),
+        'updated': int(time()),
+        'dependencies': [],
+        'resources': {}
+        }
+
+    body = json_encode(status)
+
+    return Response(body, headers={'Content-type': 'application/json',
+                                   'Access-Control-Allow-Origin': '*'})
 
 @app.route("/areas")
 def areas():
@@ -32,17 +64,7 @@ def areas():
     # This. Is. Python.
     ogr.UseExceptions()
     
-    if environ.get('GEO_DATASOURCE', None) == census_url:
-        #
-        # Use the value of the environment variable directly,
-        # get_intersecting_features() knows about census_url.
-        #
-        datasource = environ['GEO_DATASOURCE']
-    
-    else:
-        # Or just open datasource.shp with OGR.
-        datasource = ogr.Open('datasource.shp')
-    
+    datasource = get_datasource(environ)
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
     features = get_intersecting_features(datasource, point, include_geom)
 
