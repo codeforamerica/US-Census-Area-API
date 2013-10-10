@@ -1,11 +1,11 @@
 from shapely import wkb
-from census import get_features
+from census import get_features as census_features, census_url
 
 def get_intersecting_features(datasource, geometry, include_geom):
     '''
     '''
-    if datasource == 'http://forever.codeforamerica.org/Census-API/':
-        return get_features(geometry, include_geom)
+    if datasource == census_url:
+        return census_features(geometry, include_geom)
     
     features = []
 

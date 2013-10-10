@@ -8,6 +8,8 @@ from shapely.geometry import MultiPolygon, Polygon, LineString, Point
 from ModestMaps.OpenStreetMap import Provider
 from ModestMaps.Geo import Location
 
+census_url = 'http://forever.codeforamerica.org/Census-API/'
+
 def unwind(indexes, arcs, transform):
     ''' Unwind a set of TopoJSON arc indexes into a transformed line or ring.
     
@@ -69,7 +71,7 @@ def retrieve_zoom_features(loc, zoom, include_geom):
     point = Point(loc.lon, loc.lat)
     coord = osm.locationCoordinate(loc).zoomTo(zoom)
     path = '%(zoom)d/%(column)d/%(row)d' % coord.__dict__
-    url = 'http://forever.codeforamerica.org/Census-API/by-tile/%s.topojson.gz' % path
+    url = census_url + 'by-tile/%s.topojson.gz' % path
     
     resp = get(url)
     topo = resp.json()

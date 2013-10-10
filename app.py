@@ -1,4 +1,5 @@
 from sys import stderr
+from os import environ
 from urlparse import urlparse
 import json
 
@@ -9,10 +10,7 @@ from osgeo import ogr
 
 from geo import get_intersecting_features
 from util import json_encode, bool
-
-filenames = [
-    ('Bay Area Census (2010-2013)', 'datasource.shp', None),
-    ]
+from census import census_url
 
 app = Flask(__name__)
 
@@ -34,15 +32,19 @@ def areas():
     # This. Is. Python.
     ogr.UseExceptions()
     
-    features = []
+    if environ.get('GEO_DATASOURCE', None) == census_url:
+        #
+        # Use the value of the environment variable directly,
+        # get_intersecting_features() knows about census_url.
+        #
+        datasource = environ['GEO_DATASOURCE']
+    
+    else:
+        # Or just open datasource.shp with OGR.
+        datasource = ogr.Open('datasource.shp')
+    
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
-    args = point, include_geom
-
-    #
-    # Look at four files in turn
-    #
-    for (dataname, shpname, zipname) in filenames:
-        features += get_intersecting_features(ogr.Open(shpname), *args)
+    features = get_intersecting_features(datasource, point, include_geom)
 
     geojson = dict(type='FeatureCollection', features=features)
     body, mime = json_encode(geojson), 'application/json'
