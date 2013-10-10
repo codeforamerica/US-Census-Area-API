@@ -1,2 +1,5 @@
 flask
 gunicorn
+modestmaps
+requests
+shapely
