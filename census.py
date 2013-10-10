@@ -57,7 +57,7 @@ def decode(object, topo):
     
     raise Exception(object['type'])
 
-def retrieve_zoom_features(loc, zoom):
+def retrieve_zoom_features(loc, zoom, include_geom):
     ''' Retrieve all features enclosing a given point location at a zoom level.
     
         Requests TopoJSON tile from forever.codeforamerica.org spatial index,
@@ -107,29 +107,32 @@ def retrieve_zoom_features(loc, zoom):
                 shape_fails += 1
                 continue
             
-            yield dict(type='Feature',
-                       geometry=obj_shp.__geo_interface__,
-                       properties=object['properties'])
+            feature = {'type': 'Feature', 'properties': object['properties']}
+            
+            if include_geom:
+                feature['geometry'] = obj_shp.__geo_interface__
+            
+            yield feature
     
     print >> stderr, 'check took', (time() - start), 'seconds', 'in', hex(get_ident()), 'with', bbox_fails, 'bbox fails and', shape_fails, 'shape fails'
 
-def get_features(point):
+def get_features(point, include_geom):
     ''' Get a list of features found at the given point location.
     
         Thread calls to retrieve_zoom_features().
     '''
     loc = Location(point.GetY(), point.GetX())
     
-    def _retrieve_zoom_features(loc, zoom, results):
-        for result in retrieve_zoom_features(loc, zoom):
+    def _retrieve_zoom_features(zoom, results):
+        for result in retrieve_zoom_features(loc, zoom, include_geom):
             results.append(result)
     
     start = time()
     results = []
     
     threads = [
-        Thread(target=_retrieve_zoom_features, args=(loc, 10, results)),
-        Thread(target=_retrieve_zoom_features, args=(loc, 8, results))
+        Thread(target=_retrieve_zoom_features, args=(10, results)),
+        Thread(target=_retrieve_zoom_features, args=(8, results))
         ]
 
     for t in threads:
