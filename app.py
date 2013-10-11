@@ -76,6 +76,25 @@ def areas():
         mime = 'text/javascript'
     
     return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
+
+@app.route('/datasource.zip')
+def download_zip():
+    if environ.get('GEO_DATASOURCE', None) == census_url:
+        return Response('Not with ' + census_url, status=400, headers={'Content-Type': 'text/plain'})
+    
+    from StringIO import StringIO
+    from zipfile import ZipFile
+    
+    buffer = StringIO()
+    archive = ZipFile(buffer, 'w')
+    
+    archive.write('datasource.shp')
+    archive.write('datasource.shx')
+    archive.write('datasource.dbf')
+    archive.write('datasource.prj')
+    archive.close()
+    
+    return Response(buffer.getvalue(), headers={'Content-Type': 'application/zip'})
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
