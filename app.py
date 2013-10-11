@@ -2,7 +2,7 @@ from sys import stderr
 from os import environ
 from urlparse import urlparse
 from StringIO import StringIO
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATE
 from time import time
 
 from flask import Flask
@@ -96,7 +96,7 @@ def download_zip():
         return Response(render_template('error.html', error=error), status=404)
     
     buffer = StringIO()
-    archive = ZipFile(buffer, 'w')
+    archive = ZipFile(buffer, 'w', ZIP_DEFLATE)
     archive.write('datasource.shp')
     archive.write('datasource.shx')
     archive.write('datasource.dbf')
