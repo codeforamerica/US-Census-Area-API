@@ -1,11 +1,14 @@
 from sys import stderr
 from os import environ
 from urlparse import urlparse
+from StringIO import StringIO
+from zipfile import ZipFile
 from time import time
 
 from flask import Flask
 from flask import request
 from flask import Response
+from flask import render_template
 from osgeo import ogr
 
 from geo import get_intersecting_features
@@ -14,10 +17,15 @@ from census import census_url
 
 app = Flask(__name__)
 
+def is_census_datasource(environ):
+    '''
+    '''
+    return environ.get('GEO_DATASOURCE', None) == census_url
+
 def get_datasource(environ):
     '''
     '''
-    if environ.get('GEO_DATASOURCE', None) == census_url:
+    if is_census_datasource(environ):
         #
         # Use the value of the environment variable directly,
         # get_intersecting_features() knows about census_url.
@@ -33,9 +41,9 @@ def get_datasource(environ):
 @app.route('/')
 def hello():
     host_port = urlparse(request.base_url).netloc.encode('utf-8')
-
-    with open('index.html') as index:
-        return index.read().replace('host:port', host_port)
+    is_downloadable = not is_census_datasource(environ)
+    
+    return render_template('index.html', **locals())
 
 @app.route('/.well-known/status')
 def status():
@@ -77,17 +85,18 @@ def areas():
     
     return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
 
+@app.errorhandler(404)
+def error_404(error):
+    return render_template('error.html', error=str(error))
+
 @app.route('/datasource.zip')
 def download_zip():
-    if environ.get('GEO_DATASOURCE', None) == census_url:
-        return Response('Not with ' + census_url, status=400, headers={'Content-Type': 'text/plain'})
-    
-    from StringIO import StringIO
-    from zipfile import ZipFile
+    if is_census_datasource(environ):
+        error = "Can't download all of " + census_url
+        return Response(render_template('error.html', error=error), status=404)
     
     buffer = StringIO()
     archive = ZipFile(buffer, 'w')
-    
     archive.write('datasource.shp')
     archive.write('datasource.shx')
     archive.write('datasource.dbf')

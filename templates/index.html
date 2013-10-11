@@ -63,8 +63,10 @@
   </p>
   
   <ul>
-    <li><a href="#point-areas">Search areas covering a single point</a>.</li>
+    {% if is_downloadable %}
     <li><a href="#zip-download">Download the original datasource as a ZIP file</a>.</li>
+    {% endif %}
+    <li><a href="#point-areas">Search areas covering a single point</a>.</li>
   </ul>
   
   <p>
@@ -76,6 +78,30 @@
   </p>
   
   <table>
+    {% if is_downloadable %}
+    <tr>
+      <td colspan="2">
+        <h2>Download Datasource ZIP File <a id="zip-download" href="#zip-download">¶</a></h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>
+          Download a complete copy of the datasource shapefile in a ZIP archive.
+        </p>
+      
+        <h3>Endpoint</h3>
+        <p>/datasource.zip</p>
+      </td>
+      <td class="example">
+<h4>Definition</h4>
+<a href="http://{{host_port}}/datasource.zip">http://{{host_port}}/datasource.zip</a>
+
+<h4>Response</h4>
+ZIP archive
+      </td>
+    </tr>
+    {% endif %}
     <tr>
       <td colspan="2">
         <h2>Areas at a Point <a id="point-areas" href="#point-areas">¶</a></h2>
@@ -117,10 +143,10 @@
       </td>
       <td class="example">
 <h4>Definition</h4>
-http://host:port/areas?lat={latitude}&amp;lon={longitude}
+http://{{host_port}}/areas?lat={latitude}&amp;lon={longitude}
 
 <h4>Example Request</h4>
-<a href="http://host:port/areas?lat=37.775793&amp;lon=-122.413549">http://host:port/areas?lat=37.775793&amp;lon=-122.413549</a>
+<a href="http://{{host_port}}/areas?lat=37.775793&amp;lon=-122.413549">http://{{host_port}}/areas?lat=37.775793&amp;lon=-122.413549</a>
 
 <h4>Response</h4>
 {
@@ -153,28 +179,6 @@ http://host:port/areas?lat={latitude}&amp;lon={longitude}
     ...
   ]
 }
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <h2>Download Datasource ZIP File <a id="zip-download" href="#zip-download">¶</a></h2>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <p>
-          Download 
-        </p>
-      
-        <h3>Endpoint</h3>
-        <p>/datasource.zip</p>
-      </td>
-      <td class="example">
-<h4>Definition</h4>
-<a href="http://host:port/datasource.zip">http://host:port/datasource.zip</a>
-
-<h4>Response</h4>
-..
       </td>
     </tr>
   </table>
