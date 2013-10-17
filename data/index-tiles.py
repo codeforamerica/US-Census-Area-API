@@ -250,6 +250,43 @@ if __name__ == '__main__':
         cleanup(shpname)
     
     #
+    # Combine per-state block files into per-tile block files.
+    #
+    
+    coords = coordinates(zoom_high)
+    
+    for (coord, sw, ne) in coords:
+        path = prepdir(coord)
+        
+        for (index, filename) in enumerate(glob('%s/tl_2013_??_bg.json' % path)):
+            if filename.endswith('tl_2013_us_bg.json'):
+                continue
+        
+            outname = '%s/tl_2013_us_bg.json' % path
+            
+            if index == 0:
+                print 'copy', filename, 'to', outname, '...'
+                copyfile(filename, outname)
+
+            else:
+                print 'append', filename, 'to', outname, '...'
+                append_geojson(filename, outname)
+        
+        for (index, filename) in enumerate(glob('%s/tl_2013_??_tabblock.json' % path)):
+            if filename.endswith('tl_2013_us_tabblock.json'):
+                continue
+        
+            outname = '%s/tl_2013_us_tabblock.json' % path
+            
+            if index == 0:
+                print 'copy', filename, 'to', outname, '...'
+                copyfile(filename, outname)
+
+            else:
+                print 'append', filename, 'to', outname, '...'
+                append_geojson(filename, outname)
+    
+    #
     # 
     #
     
