@@ -89,6 +89,8 @@ def retrieve_zoom_features(loc, zoom, include_geom):
             assert layer in ('state', 'county', 'place', 'cbsa')
         elif zoom == 10:
             assert layer in ('zcta510', 'tract')
+        elif zoom == 12:
+            assert layer in ('bg', 'tabblock')
         else:
             raise Exception('Unknown layer %d' % zoom)
         
@@ -133,6 +135,7 @@ def get_features(point, include_geom):
     results = []
     
     threads = [
+        Thread(target=_retrieve_zoom_features, args=(12, results)),
         Thread(target=_retrieve_zoom_features, args=(10, results)),
         Thread(target=_retrieve_zoom_features, args=(8, results))
         ]
