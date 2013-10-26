@@ -91,7 +91,7 @@ def retrieve_zoom_features(loc, zoom, include_geom, layer_names):
     bbox_fails, shape_fails = 0, 0
     
     for layer in topo['objects']:
-        if layer not in layer_names:
+        if layer_names is not None and layer not in layer_names:
             continue
     
         if zoom in zoom_layers:
@@ -133,17 +133,22 @@ def get_features(point, include_geom, layer_names):
     loc = Location(point.GetY(), point.GetX())
     
     def _retrieve_zoom_features(zoom, results):
-        for result in retrieve_zoom_features(loc, zoom, include_geom, layer_names):
+        for result in retrieve_zoom_features(loc, zoom, include_geom, layer_names or None):
             results.append(result)
     
     start = time()
     results = []
     
-    #
-    # Prepare one thread for each zoom_layer needed to get the named layers.
-    #
-    layer_needs = [(z, layer_names & zoom_layers[z]) for z in zoom_layers]
-    layer_args = [(zoom, results) for (zoom, layers) in layer_needs if layers]
+    if layer_names:
+        #
+        # Prepare one thread for each zoom_layer needed to get the named layers.
+        #
+        layer_needs = [(z, layer_names & zoom_layers[z]) for z in zoom_layers]
+        layer_args = [(zoom, results) for (zoom, layers) in layer_needs if layers]
+
+    else:
+        layer_args = [(zoom, results) for zoom in zoom_layers]
+
     threads = [Thread(target=_retrieve_zoom_features, args=a) for a in layer_args]
     
     for t in threads:

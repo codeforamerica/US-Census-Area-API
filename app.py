@@ -72,7 +72,9 @@ def areas():
 
     include_geom = bool(request.args.get('include_geom', True))
     json_callback = request.args.get('callback', None)
-    layer_names = is_census and set(request.args.get('layers', '').split(','))
+
+    layer_names = is_census and request.args.get('layers', '')
+    layer_names = layer_names and set(layer_names.split(','))
     
     # This. Is. Python.
     ogr.UseExceptions()
