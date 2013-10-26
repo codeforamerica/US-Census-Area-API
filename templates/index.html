@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Census API by Code for America</title>
+  <title>{% if is_us_census %}U.S. Census{% else %}Geographic{% endif %} Area API by Code for America</title>
   <link rel="stylesheet" href="http://www.openstreetmap.us/~migurski/style.css" />
   <style type="text/css">
   <!--
@@ -50,16 +50,16 @@
 </head>
 <body>
 
-  <h1>U.S. Census Area API</h1>
+  <h1>{% if is_us_census %}U.S. Census{% else %}Geographic{% endif %} Area API</h1>
 
   <p>
-    Simple geospatial API for US Census, in response to the
+    Simple geospatial API{% if is_us_census %} for U.S. Census{% endif %}, in response to the
     <a href="https://github.com/codeforamerica/hack-requests/blob/master/census-area-API.md">Census Area API hack request</a>.
     <a href="https://github.com/codeforamerica/US-Census-Area-API">Fork me on Github</a>.
   </p>
   
   <p>
-    With the Census API, you can:
+    With this API, you can:
   </p>
   
   <ul>

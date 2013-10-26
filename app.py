@@ -42,6 +42,7 @@ def get_datasource(environ):
 def hello():
     host_port = urlparse(request.base_url).netloc.encode('utf-8')
     is_downloadable = not is_census_datasource(environ)
+    is_us_census = is_census_datasource(environ)
     
     return render_template('index.html', **locals())
 
