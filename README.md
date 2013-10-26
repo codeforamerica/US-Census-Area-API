@@ -48,3 +48,10 @@ a remote zip file such as *bay-area-data.zip* (URL linked above),
 [user-env-compile](https://devcenter.heroku.com/articles/labs-user-env-compile).
 Data will be automatically retrieved and expanded to *datasource.shp* at
 compile time.
+
+Credits
+----
+
+Written by [Michal Migurski](https://github.com/migurski) with
+[Andy Hull](https://github.com/andyhull), (c) 2013 Code for America.
+See `LICENSE` for license information.
