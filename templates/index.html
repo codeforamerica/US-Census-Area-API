@@ -131,6 +131,25 @@ ZIP archive
         
           <dt>callback</dt>
           <dd>Optional <a href="http://en.wikipedia.org/wiki/JSONP">JSONP callback</a> function name.</dd>
+          
+          {% if is_us_census %}
+            <dt>layers</dt>
+            <dd>
+              Optional comma-delimited list of layer names.
+              <br>
+              Available layers include:
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch4GARM.pdf">state</a>,
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch4GARM.pdf">county</a>,
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch9GARM.pdf">place</a>,
+              <a href="http://www.census.gov/population/metro/">cbsa</a>,
+              <a href="http://www.census.gov/geo/reference/zctas.html">zcta510</a> (zip codes),
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch10GARM.pdf">tract</a>,
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch11GARM.pdf">bg</a> (block group), and
+              <a href="http://www.census.gov/geo/reference/pdfs/GARM/Ch11GARM.pdf">tabblock</a> (tabulation block).
+              <br>
+              If omitted, all layers will be included in response.
+            </dd>
+          {% endif %}
         </dl>
         
         <h3>Response Format <a id="response-format" href="#response-format">¶</a></h3>

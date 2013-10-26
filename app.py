@@ -65,19 +65,22 @@ def status():
 def areas():
     ''' Retrieve geographic areas.
     '''
+    is_census = is_census_datasource(environ)
+    
     lat = float(request.args['lat'])
     lon = float(request.args['lon'])
 
     include_geom = bool(request.args.get('include_geom', True))
     json_callback = request.args.get('callback', None)
+    layer_names = is_census and set(request.args.get('layers', '').split(','))
     
     # This. Is. Python.
     ogr.UseExceptions()
     
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
 
-    if is_census_datasource(environ):
-        features = census_features(point, include_geom)
+    if is_census:
+        features = census_features(point, include_geom, layer_names)
     
     else:
         datasource = get_datasource(environ)

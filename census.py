@@ -10,6 +10,12 @@ from ModestMaps.Geo import Location
 
 census_url = 'http://forever.codeforamerica.org/Census-API/'
 
+zoom_layers = {
+    8:  set(('state', 'county', 'place', 'cbsa')),
+    10: set(('zcta510', 'tract')),
+    12: set(('bg', 'tabblock'))
+    }
+
 def unwind(indexes, arcs, transform):
     ''' Unwind a set of TopoJSON arc indexes into a transformed line or ring.
     
@@ -59,7 +65,7 @@ def decode(object, topo):
     
     raise Exception(object['type'])
 
-def retrieve_zoom_features(loc, zoom, include_geom):
+def retrieve_zoom_features(loc, zoom, include_geom, layer_names):
     ''' Retrieve all features enclosing a given point location at a zoom level.
     
         Requests TopoJSON tile from forever.codeforamerica.org spatial index,
@@ -85,12 +91,11 @@ def retrieve_zoom_features(loc, zoom, include_geom):
     bbox_fails, shape_fails = 0, 0
     
     for layer in topo['objects']:
-        if zoom == 8:
-            assert layer in ('state', 'county', 'place', 'cbsa')
-        elif zoom == 10:
-            assert layer in ('zcta510', 'tract')
-        elif zoom == 12:
-            assert layer in ('bg', 'tabblock')
+        if layer not in layer_names:
+            continue
+    
+        if zoom in zoom_layers:
+            assert layer in zoom_layers[zoom]
         else:
             raise Exception('Unknown layer %d' % zoom)
         
@@ -120,7 +125,7 @@ def retrieve_zoom_features(loc, zoom, include_geom):
     
     print >> stderr, 'check took', (time() - start), 'seconds', 'in', hex(get_ident()), 'with', bbox_fails, 'bbox fails and', shape_fails, 'shape fails'
 
-def get_features(point, include_geom):
+def get_features(point, include_geom, layer_names):
     ''' Get a list of features found at the given point location.
     
         Thread calls to retrieve_zoom_features().
@@ -128,18 +133,19 @@ def get_features(point, include_geom):
     loc = Location(point.GetY(), point.GetX())
     
     def _retrieve_zoom_features(zoom, results):
-        for result in retrieve_zoom_features(loc, zoom, include_geom):
+        for result in retrieve_zoom_features(loc, zoom, include_geom, layer_names):
             results.append(result)
     
     start = time()
     results = []
     
-    threads = [
-        Thread(target=_retrieve_zoom_features, args=(12, results)),
-        Thread(target=_retrieve_zoom_features, args=(10, results)),
-        Thread(target=_retrieve_zoom_features, args=(8, results))
-        ]
-
+    #
+    # Prepare one thread for each zoom_layer needed to get the named layers.
+    #
+    layer_needs = [(z, layer_names & zoom_layers[z]) for z in zoom_layers]
+    layer_args = [(zoom, results) for (zoom, layers) in layer_needs if layers]
+    threads = [Thread(target=_retrieve_zoom_features, args=a) for a in layer_args]
+    
     for t in threads:
         t.start()
     
