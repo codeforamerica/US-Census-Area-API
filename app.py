@@ -13,23 +13,22 @@ from osgeo import ogr
 
 from geo import get_intersecting_features
 from util import json_encode, bool
-from census import census_url
+from census import census_url, get_features as census_features
 
 app = Flask(__name__)
 
 def is_census_datasource(environ):
-    '''
+    ''' Return true if the environment specifies the U.S. Census datasource.
     '''
     return environ.get('GEO_DATASOURCE', None) == census_url
 
 def get_datasource(environ):
-    '''
+    ''' Return an environment-appropriate datasource.
+    
+        For local data, this will be an OGR Datasource object.
     '''
     if is_census_datasource(environ):
-        #
         # Use the value of the environment variable directly,
-        # get_intersecting_features() knows about census_url.
-        #
         datasource = environ['GEO_DATASOURCE']
     
     else:
@@ -64,6 +63,8 @@ def status():
 
 @app.route("/areas")
 def areas():
+    ''' Retrieve geographic areas.
+    '''
     lat = float(request.args['lat'])
     lon = float(request.args['lon'])
 
@@ -73,10 +74,15 @@ def areas():
     # This. Is. Python.
     ogr.UseExceptions()
     
-    datasource = get_datasource(environ)
     point = ogr.Geometry(wkt='POINT(%f %f)' % (lon, lat))
-    features = get_intersecting_features(datasource, point, include_geom)
 
+    if is_census_datasource(environ):
+        features = census_features(point, include_geom)
+    
+    else:
+        datasource = get_datasource(environ)
+        features = get_intersecting_features(datasource, point, include_geom)
+    
     geojson = dict(type='FeatureCollection', features=features)
     body, mime = json_encode(geojson), 'application/json'
     
