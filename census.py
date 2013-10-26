@@ -1,5 +1,5 @@
 from time import time
-from sys import stderr
+from logging import debug
 from threading import Thread
 from thread import get_ident
 
@@ -82,7 +82,7 @@ def retrieve_zoom_features(loc, zoom, include_geom, layer_names):
     resp = get(url)
     topo = resp.json()
 
-    print >> stderr, 'request took', resp.elapsed, 'from', url, 'in', hex(get_ident())
+    debug('request took %.3fs from %s in %s' % (resp.elapsed.total_seconds(), url, hex(get_ident())))
     
     start = time()
     
@@ -123,7 +123,7 @@ def retrieve_zoom_features(loc, zoom, include_geom, layer_names):
             
             yield feature
     
-    print >> stderr, 'check took', (time() - start), 'seconds', 'in', hex(get_ident()), 'with', bbox_fails, 'bbox fails and', shape_fails, 'shape fails'
+    debug('check took %.3fs in %s with %d bbox fails and %d shape fails' % (time() - start, hex(get_ident()), bbox_fails, shape_fails))
 
 def get_features(point, include_geom, layer_names):
     ''' Get a list of features found at the given point location.
@@ -157,6 +157,6 @@ def get_features(point, include_geom, layer_names):
     for t in threads:
         t.join()
     
-    print >> stderr, 'results took', (time() - start), 'seconds'
+    debug('results took %.3f seconds' % (time() - start))
     
     return results
