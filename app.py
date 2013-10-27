@@ -16,6 +16,8 @@ from geo import features_geojson, QueryError
 from geo import get_intersecting_features, get_matching_features
 from census import census_url, get_features as census_features
 
+cors = 'Access-Control-Allow-Origin'
+
 app = Flask(__name__)
 
 def is_census_datasource(environ):
@@ -59,8 +61,7 @@ def status():
 
     body = json_encode(status)
 
-    return Response(body, headers={'Content-type': 'application/json',
-                                   'Access-Control-Allow-Origin': '*'})
+    return Response(body, headers={'Content-type': 'application/json', cors: '*'})
 
 @app.route("/areas")
 def areas():
@@ -91,7 +92,7 @@ def areas():
     
     body, mime = features_geojson(features, json_callback)
     
-    return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
+    return Response(body, headers={'Content-type': mime, cors: '*'})
 
 @app.route('/select')
 def select():
@@ -123,11 +124,11 @@ def select():
             body = '%s(%s);\n' % (json_callback, body)
             mime = 'text/javascript'
 
-        return Response(body, status=400, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
+        return Response(body, status=400, headers={'Content-type': mime, cors: '*'})
     
     else:
         body, mime = features_geojson(features, json_callback)
-        return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
+        return Response(body, headers={'Content-type': mime, cors: '*'})
 
 @app.errorhandler(404)
 def error_404(error):
