@@ -67,6 +67,9 @@
     <li><a href="#zip-download">Download the original datasource as a ZIP file</a>.</li>
     {% endif %}
     <li><a href="#point-areas">Search areas covering a single point</a>.</li>
+    {% if not is_us_census %}
+    <li><a href="#select">Select features by attribute values</a>.</li>
+    {% endif %}
   </ul>
   
   <p>
@@ -201,6 +204,83 @@ http://{{host_port}}/areas?lat={latitude}&amp;lon={longitude}
 }
       </td>
     </tr>
+    {% if not is_us_census %}
+    <tr>
+      <td colspan="2">
+        <h2>Select features by attribute values <a id="select" href="#select">¶</a></h2>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>
+          Return all features that match a logical expression.
+        </p>
+      
+        <h3>Endpoint</h3>
+        <p>/select</p>
+      
+        <h3>Arguments</h3>
+        
+        <dl>
+          <dt>where</dt>
+          <dd>Optional expression, such as <q>NAME = 'California'</q>. Value is passed directly to the datasource, and must match OGR’s <a href="http://www.gdal.org/ogr/ogr_sql.html#ogr_sql_where">SQL dialect for Where clauses</a>.</dd>
+
+          <dt>page</dt>
+          <dd>Optional page number to select additional features. Each page contains up to 25 features. Default 1.</dd>
+        
+          <dt>include_geom</dt>
+          <dd>Optional boolean flag to include complete geometries in response. Default True.</dd>
+        
+          <dt>callback</dt>
+          <dd>Optional <a href="http://en.wikipedia.org/wiki/JSONP">JSONP callback</a> function name.</dd>
+        </dl>
+        
+        <h3>Response Format</h3>
+        <p>
+          Responses are given in <a href="http://geojson.org/">GeoJSON format</a>.
+        </p>
+      </td>
+      <td class="example">
+<h4>Definition</h4>
+http://{{host_port}}/select?where={expression}
+
+<h4>Example Request</h4>
+<a href="http://{{host_port}}/select?where=NAME='California'">http://{{host_port}}/select?where=NAME='California'</a>
+
+<h4>Response</h4>
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature", 
+      "properties": {
+        "NAME": "California", 
+        "GEOID": "06", 
+        "MTFCC": "G4000", 
+        "dataset": "Bay Area Census (2010-2013)", 
+        ...
+      }, 
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [ -123.792812, 39.102313 ], 
+              [ -123.793856, 39.104178 ], 
+              ...
+              [ -123.792812, 39.102313 ]
+            ]
+          ], 
+          ...
+        ],
+      }
+    }, 
+    ...
+  ]
+}
+      </td>
+    </tr>
+    {% endif %}
   </table>
 
 </body>
