@@ -11,8 +11,8 @@ from flask import Response
 from flask import render_template
 from osgeo import ogr
 
-from geo import get_intersecting_features
 from util import json_encode, bool
+from geo import get_intersecting_features, get_matching_features, features_geojson
 from census import census_url, get_features as census_features
 
 app = Flask(__name__)
@@ -94,6 +94,28 @@ def areas():
     if json_callback:
         body = '%s(%s);\n' % (json_callback, body)
         mime = 'text/javascript'
+    
+    return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
+
+@app.route('/select')
+def select():
+    ''' Retrieve features.
+    '''
+    if is_census_datasource(environ):
+        error = "Can't select individual features from " + census_url
+        return Response(render_template('error.html', error=error), status=404)
+
+    where_clause = str(request.args['where'])
+    
+    include_geom = bool(request.args.get('include_geom', True))
+    json_callback = request.args.get('callback', None)
+
+    # This. Is. Python.
+    ogr.UseExceptions()
+    
+    datasource = get_datasource(environ)
+    features = get_matching_features(datasource, where_clause, include_geom)
+    body, mime = features_geojson(features, json_callback)
     
     return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
 
