@@ -13,7 +13,7 @@ def features_geojson(features, json_callback):
     
     return body, mime
 
-def layer_features(layer, include_geom):
+def layer_features(layer, include_geom, offset=0, count=25):
     '''
     '''
     features = []
@@ -21,7 +21,15 @@ def layer_features(layer, include_geom):
     defn = layer.GetLayerDefn()
     names = [defn.GetFieldDefn(i).name for i in range(defn.GetFieldCount())]
     
+    # Skip leading features
+    for skip in range(offset):
+        layer.GetNextFeature()
+    
     for feature in layer:
+        # Stop reading features
+        if len(features) == count:
+            break
+    
         properties = dict()
         
         for (index, name) in enumerate(names):
