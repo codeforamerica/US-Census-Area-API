@@ -1,6 +1,9 @@
 from shapely import wkb
 from util import json_encode
 
+class QueryError (RuntimeError):
+    pass
+
 def features_geojson(features, json_callback):
     '''
     '''
@@ -57,9 +60,11 @@ def get_intersecting_features(datasource, geometry, include_geom):
 def get_matching_features(datasource, where_clause, page_number, include_geom):
     '''
     '''
-    offset, count = (page_number - 1) * 25, 25
-    
-    layer = datasource.GetLayer(0)
-    layer.SetAttributeFilter(where_clause)
+    layer, offset, count = datasource.GetLayer(0), (page_number - 1) * 25, 25
+
+    try:
+        layer.SetAttributeFilter(where_clause)
+    except RuntimeError, e:
+        raise QueryError('Bad where clause: ' + str(e))
     
     return layer_features(layer, include_geom, offset, count)
