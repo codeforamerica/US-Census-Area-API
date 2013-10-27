@@ -54,10 +54,12 @@ def get_intersecting_features(datasource, geometry, include_geom):
     
     return layer_features(layer, include_geom)
 
-def get_matching_features(datasource, where_clause, include_geom):
+def get_matching_features(datasource, where_clause, page_number, include_geom):
     '''
     '''
+    offset, count = (page_number - 1) * 25, 25
+    
     layer = datasource.GetLayer(0)
     layer.SetAttributeFilter(where_clause)
     
-    return layer_features(layer, include_geom)
+    return layer_features(layer, include_geom, offset, count)

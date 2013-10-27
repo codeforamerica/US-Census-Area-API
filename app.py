@@ -105,7 +105,10 @@ def select():
         error = "Can't select individual features from " + census_url
         return Response(render_template('error.html', error=error), status=404)
 
-    where_clause = str(request.args['where'])
+    where_clause = request.args.get('where', None)
+    where_clause = where_clause and str(where_clause)
+    
+    page_number = int(request.args.get('page', 1))
     
     include_geom = bool(request.args.get('include_geom', True))
     json_callback = request.args.get('callback', None)
@@ -114,7 +117,7 @@ def select():
     ogr.UseExceptions()
     
     datasource = get_datasource(environ)
-    features = get_matching_features(datasource, where_clause, include_geom)
+    features = get_matching_features(datasource, where_clause, page_number, include_geom)
     body, mime = features_geojson(features, json_callback)
     
     return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
