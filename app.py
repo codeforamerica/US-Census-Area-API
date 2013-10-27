@@ -88,12 +88,7 @@ def areas():
         datasource = get_datasource(environ)
         features = get_intersecting_features(datasource, point, include_geom)
     
-    geojson = dict(type='FeatureCollection', features=features)
-    body, mime = json_encode(geojson), 'application/json'
-    
-    if json_callback:
-        body = '%s(%s);\n' % (json_callback, body)
-        mime = 'text/javascript'
+    body, mime = features_geojson(features, json_callback)
     
     return Response(body, headers={'Content-type': mime, 'Access-Control-Allow-Origin': '*'})
 
