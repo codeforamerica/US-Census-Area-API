@@ -1,0 +1,9 @@
+
+{
+  "name": "Heroku Census Test",
+  "repository": "https://github.com/codeforamerica/US-Census-Area-API",
+  "env": {
+    "BUILDPACK_URL": "https://github.com/codeforamerica/heroku-buildpack-pygeo",
+    "ZIPPED_DATA_URL": "http://data.openoakland.org/en/storage/f/2014-01-04T221414/oaklandcouncil_districts_2014.zip"
+  }
+}
