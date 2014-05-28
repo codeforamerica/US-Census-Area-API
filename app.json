@@ -3,6 +3,6 @@
   "name": "Heroku Census Test",
   "env": {
     "BUILDPACK_URL": "https://github.com/codeforamerica/heroku-buildpack-pygeo",
-    "ZIPPED_DATA_URL": "http://data.openoakland.org/en/storage/f/2014-01-04T221414/oaklandcouncil_districts_2014.zip"
+    "ZIPPED_DATA_URL": "http://data.openoakland.org/storage/f/2012-07-14T052946/Oak_CityCouncilDistricts.zip"
   }
 }
